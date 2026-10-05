@@ -1,0 +1,32 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+      - name: Build package
+        run: |
+          NAME="email-sender-${GITHUB_REF_NAME}"
+          mkdir -p "dist/$NAME"
+          cp app.py index.html README.md "dist/$NAME/"
+          (cd dist && zip -r "$NAME.zip" "$NAME" && tar -czf "$NAME.tar.gz" "$NAME")
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/*.zip dist/*.tar.gz \
+            --title "Email Sender $GITHUB_REF_NAME" \
+            --notes "Download \`email-sender-${GITHUB_REF_NAME}.zip\`, unzip it, and run \`python3 app.py\` (Windows: \`py app.py\`). Requires Python 3.9+, no other dependencies. See the README for setting up a Gmail App Password."
