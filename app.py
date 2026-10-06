@@ -105,6 +105,34 @@ def parse_recipients(raw):
     return out, invalid
 
 
+def deliver(conns, sender, msg):
+    """Send msg over a cached connection for sender; reconnect once on a dropped link.
+    Returns None on success or an error string."""
+    error = None
+    for _ in range(2):
+        try:
+            if sender["email"] not in conns:
+                conns[sender["email"]] = connect(sender)
+            conns[sender["email"]].send_message(msg)
+            return None
+        except (smtplib.SMTPServerDisconnected, smtplib.SMTPSenderRefused, OSError) as e:
+            conns.pop(sender["email"], None)
+            error = str(e)
+        except smtplib.SMTPException as e:
+            return str(e)
+    return error
+
+
+def log_send(entry, subject):
+    with LOG_FILE.open("a") as f:
+        f.write(json.dumps({**entry, "subject": subject}) + "\n")
+
+
+# connections kept open between /api/send-one calls (used by the browser extension)
+single_conns = {}
+single_lock = threading.Lock()
+
+
 def run_job(job_id, senders, recipients, subject, body, is_html, mode, delay):
     job = jobs[job_id]
     # "rotate": spread recipients across senders; "all": every sender emails every recipient
@@ -120,25 +148,12 @@ def run_job(job_id, senders, recipients, subject, body, is_html, mode, delay):
                 job["status"] = "cancelled"
                 break
             entry = {"from": sender["email"], "to": addr, "time": time.strftime("%Y-%m-%d %H:%M:%S")}
-            msg = build_message(sender, name, addr, subject, body, is_html)
-            for attempt in range(2):
-                try:
-                    if sender["email"] not in conns:
-                        conns[sender["email"]] = connect(sender)
-                    conns[sender["email"]].send_message(msg)
-                    entry["ok"] = True
-                    break
-                except (smtplib.SMTPServerDisconnected, smtplib.SMTPSenderRefused, OSError) as e:
-                    conns.pop(sender["email"], None)  # reconnect once, then give up
-                    entry.update(ok=False, error=str(e))
-                except smtplib.SMTPException as e:
-                    entry.update(ok=False, error=str(e))
-                    break
+            error = deliver(conns, sender, build_message(sender, name, addr, subject, body, is_html))
+            entry.update(ok=error is None, **({"error": error} if error else {}))
             with lock:
                 job["results"].append(entry)
                 job["sent" if entry["ok"] else "failed"] += 1
-            with LOG_FILE.open("a") as f:
-                f.write(json.dumps({**entry, "subject": subject}) + "\n")
+            log_send(entry, subject)
             if delay and i < len(tasks) - 1:
                 time.sleep(delay)
         else:
@@ -240,6 +255,22 @@ class Handler(BaseHTTPRequestHandler):
                 data.get("mode", "rotate"), max(0.0, float(data.get("delay") or 0)),
             )).start()
             return self.send_json({"id": job_id})
+
+        if path == "/api/send-one":
+            sender = next((s for s in load_senders() if s["email"] == data.get("from")), None)
+            name, addr = data.get("name") or "", (data.get("to") or "").strip().lower()
+            subject, body = data.get("subject") or "", data.get("body") or ""
+            if not sender:
+                return self.send_json({"error": "Unknown sender"}, 400)
+            if not EMAIL_RE.match(addr) or not subject.strip() or not body.strip():
+                return self.send_json({"error": "Recipient, subject and body are required"}, 400)
+            msg = build_message(sender, name, addr, subject, body, bool(data.get("html")))
+            with single_lock:
+                error = deliver(single_conns, sender, msg)
+            entry = {"from": sender["email"], "to": addr, "time": time.strftime("%Y-%m-%d %H:%M:%S"),
+                     "ok": error is None, **({"error": error} if error else {})}
+            log_send(entry, subject)
+            return self.send_json(entry, 200 if error is None else 502)
 
         if path == "/api/job/cancel":
             if data.get("id") in jobs:

@@ -2,3 +2,4 @@ senders.json
 send_log.jsonl
 __pycache__/
 .claude/
+extension-key.pem

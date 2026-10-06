@@ -114,6 +114,19 @@ class AppTest(unittest.TestCase):
         })
         self.assertEqual(self.wait(job["id"])["sent"], 4)
 
+    def test_send_one_for_extension(self):
+        self.add_senders()
+        code, entry = self.call("/api/send-one", {
+            "from": "b@outlook.com", "to": "Jane@X.com", "name": "Jane",
+            "subject": "Hi {name}", "body": "Hello {email}", "html": False,
+        })
+        self.assertEqual((code, entry["ok"], entry["to"]), (200, True, "jane@x.com"))
+        sender, msg = FakeSMTP.sent[0]
+        self.assertEqual((sender, msg["Subject"]), ("b@outlook.com", "Hi Jane"))
+        self.assertIn("Hello jane@x.com", msg.get_content())
+        code, body = self.call("/api/send-one", {"from": "nobody@x.com", "to": "a@b.co", "subject": "s", "body": "b"})
+        self.assertEqual((code, body["error"]), (400, "Unknown sender"))
+
     def test_send_validation(self):
         self.add_senders()
         code, body = self.call("/api/send", {"senders": [], "recipients": "x@y.com", "subject": "s", "body": "b"})

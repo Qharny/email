@@ -15,18 +15,36 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
       - name: Run tests
-        run: python -m unittest discover -s tests -v
-      - name: Build package
+        run: |
+          python -m unittest discover -s tests -v
+          node --test tests/js/lib.test.mjs
+      - name: Check extension version matches tag
+        run: |
+          MANIFEST=$(python -c "import json; print(json.load(open('extension/manifest.json'))['version'])")
+          [ "v$MANIFEST" = "$GITHUB_REF_NAME" ] || { echo "manifest.json version $MANIFEST != tag $GITHUB_REF_NAME"; exit 1; }
+      - name: Build packages
         run: |
           NAME="email-sender-${GITHUB_REF_NAME}"
           mkdir -p "dist/$NAME"
           cp app.py index.html README.md "dist/$NAME/"
           (cd dist && zip -r "$NAME.zip" "$NAME" && tar -czf "$NAME.tar.gz" "$NAME")
+          (cd extension && zip -r "../dist/email-sender-extension-${GITHUB_REF_NAME}.zip" . -x '*.DS_Store')
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          cat > notes.md <<EOF
+          ## Browser extension (Chrome, Edge, Brave)
+          1. Download \`email-sender-extension-${GITHUB_REF_NAME}.zip\` and unzip it into a folder.
+          2. Open \`chrome://extensions\` (or \`edge://extensions\`, \`brave://extensions\`), turn on **Developer mode**, click **Load unpacked** and pick that folder.
+          3. Click the Email Sender icon in the toolbar. Gmail accounts work directly; see the README for the one-time Google client ID setup.
+
+          ## Companion app (needed for Outlook, Yahoo and other SMTP accounts)
+          Download \`email-sender-${GITHUB_REF_NAME}.zip\`, unzip it, and run \`python3 app.py\` (Windows: \`py app.py\`). Requires Python 3.9+, no other dependencies.
+          EOF
           gh release create "$GITHUB_REF_NAME" dist/*.zip dist/*.tar.gz \
-            --title "Email Sender $GITHUB_REF_NAME" \
-            --notes "Download \`email-sender-${GITHUB_REF_NAME}.zip\`, unzip it, and run \`python3 app.py\` (Windows: \`py app.py\`). Requires Python 3.9+, no other dependencies. See the README for setting up a Gmail App Password."
+            --title "Email Sender $GITHUB_REF_NAME" --notes-file notes.md
