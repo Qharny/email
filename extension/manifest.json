@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Email Sender",
   "short_name": "Email Sender",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Send one email to many recipients from your Gmail accounts (or any SMTP account via the companion app).",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApwQfPQMAhbPbxmmAOXjilDPaO1Hn6uhMZlksJGHMmmYcIlExOGkCD2v4CRcwj6olRnt4fipSdzmuvwjbWbuTtAYjJA3HDfbY7yAF85bxRvqNy/0IbW0rqW19a4YpG7I2ibn6xn/4bpWGpnAnmi55+ytfNsBQWxzgMTM9Ni+kuyDSSGmhL6754V5or/AZ/hzDZrtApDyBflde7Vh7h1H2YTlQfB2RVnQFuNu91L2KWiUTlvocMDmNawjhpqvYkRLTaCkaw7TgMfRHTY/0nQbyk8apsjpIFBPVZ4qd4MaDl/IFsif//OY34e3SdbLc6tjHiSiapHlQGw6pmgZn8EUaDwIDAQAB",
   "icons": {

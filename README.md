@@ -86,4 +86,4 @@ node --test tests/js/lib.test.mjs          # extension
 
 To try the extension from source, load the `extension/` folder with **Load unpacked**.
 
-CI runs both test suites on every push and pull request. To release, bump `version` in `extension/manifest.json`, then push a matching tag (e.g. `v1.1.0`): the workflow runs the tests and publishes the extension zip and the local-app zip/tarball as a GitHub Release.
+CI runs both test suites on every push and pull request. To release, bump `version` in `extension/manifest.json`, then push a matching tag (e.g. `v1.3.0`): the workflow runs the tests and publishes the extension zip and the local-app zip/tarball as a GitHub Release.
