@@ -1,0 +1,116 @@
+:root {
+    --bg: #f9f9f9;
+    --text: #0f0f0f;
+    --muted: #606060;
+    --border: #d9d9d9;
+    --accent: #2f5bea;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #181818;
+        --text: #f1f1f1;
+        --muted: #aaaaaa;
+        --border: #303030;
+        --accent: #6d8cff;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 64px 16px 48px;
+}
+
+a {
+    color: var(--accent);
+}
+
+.brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+}
+
+.brand h1 {
+    margin: 0;
+    font-size: 30px;
+    letter-spacing: -0.01em;
+}
+
+.lead {
+    max-width: 560px;
+    margin: 0 auto;
+    color: var(--muted);
+    text-align: center;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin: 28px 0 40px;
+}
+
+.button {
+    display: inline-block;
+    padding: 10px 20px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.button.primary {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+}
+
+.shot {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+h2 {
+    margin-top: 40px;
+    font-size: 20px;
+}
+
+.doc h1 {
+    font-size: 28px;
+}
+
+.updated {
+    color: var(--muted);
+}
+
+footer {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 14px;
+    text-align: center;
+}
+
+footer a {
+    margin: 0 8px;
+}

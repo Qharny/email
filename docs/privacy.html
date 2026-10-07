@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy · Email Sender</title>
+<link rel="icon" href="logo.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="doc">
+  <p><a href="./">← Email Sender</a></p>
+  <h1>Privacy Policy</h1>
+  <p class="updated">Last updated: 7 October 2026</p>
+
+  <p>Email Sender ("the extension") is an open-source browser extension, with an optional companion app, that sends emails you write from email accounts you connect. This policy explains what data it uses and where that data goes.</p>
+
+  <h2>Summary</h2>
+  <ul>
+    <li>Email Sender has no server. We do not collect, receive, store or sell any of your data.</li>
+    <li>Your messages go directly from your browser (or the companion app on your computer) to Gmail or your own email provider.</li>
+    <li>For Gmail, the extension only asks for permission to <strong>send</strong> email. It cannot read, delete or change your existing email.</li>
+  </ul>
+
+  <h2>Google user data</h2>
+  <p>When you click "Sign in with Google", the extension asks for these permissions:</p>
+  <ul>
+    <li><code>https://www.googleapis.com/auth/gmail.send</code>: to send the emails you compose, from your Gmail account.</li>
+    <li><code>email</code> and <code>profile</code>: to show which account is connected (your email address and name).</li>
+  </ul>
+  <p>Google returns a short-lived access token (valid for about one hour). The extension stores that token, your email address and your name in your browser's local extension storage, on your device only. The token is used only to call the Gmail API to send the messages you choose to send, and to read your basic profile once at sign-in. Email content, recipients and tokens are never sent anywhere else.</p>
+  <p>Email Sender's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements. Google user data is not used for advertising, is not sold, is not transferred to third parties, and is not read by humans.</p>
+
+  <h2>Other email accounts (companion app)</h2>
+  <p>If you add an Outlook, Yahoo or other SMTP account, its address, display name and app password are saved by the companion app in a file called <code>senders.json</code> on your own computer, readable only by your user account. The companion app also keeps a local log of send attempts (time, sender, recipient, subject and result) in <code>send_log.jsonl</code>. It only accepts connections from your own computer (<code>127.0.0.1</code>) and sends mail directly to your provider's mail server.</p>
+
+  <h2>What you type</h2>
+  <p>Recipients, subjects and message text exist only in the open extension tab while you write and send. They are not saved by the extension.</p>
+
+  <h2>Removing your data</h2>
+  <ul>
+    <li>Remove an account from the extension's Accounts panel, or uninstall the extension to delete all of its stored data.</li>
+    <li>Revoke Gmail access at any time at <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.</li>
+    <li>Delete <code>senders.json</code> and <code>send_log.jsonl</code> to remove the companion app's data.</li>
+  </ul>
+
+  <h2>Children</h2>
+  <p>Email Sender is not directed at children under 13.</p>
+
+  <h2>Changes</h2>
+  <p>If this policy changes, the updated version will be published on this page with a new "last updated" date.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy: open an issue at <a href="https://github.com/Qharny/email/issues">github.com/Qharny/email/issues</a>.</p>
+</main>
+<footer>
+  <a href="./">Home</a>
+  <a href="terms.html">Terms of service</a>
+  <a href="https://github.com/Qharny/email">GitHub</a>
+</footer>
+</body>
+</html>
