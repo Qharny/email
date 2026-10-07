@@ -1,10 +1,11 @@
-import { DEFAULT_LOCAL_URL, GOOGLE_CLIENT_ID } from "./config.js";
-import { ensureToken, sendGmail, signIn } from "./gmail.js";
-import { fill, parseRecipients, planTasks } from "./lib.js";
+import { DEFAULT_LOCAL_URL, GOOGLE_CLIENT_ID } from "../lib/config.js";
+import { ensureToken, sendGmail, signIn } from "../lib/gmail.js";
+import { fill, parseRecipients, planTasks } from "../lib/lib.js";
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 const setMsg = (el, text, kind = "") => { el.className = `msg ${kind}`; el.textContent = text; };
 
 // ---------- state ----------
@@ -41,9 +42,7 @@ async function refreshLocal() {
     localOnline = false;
   }
   $("#localDot").classList.toggle("on", localOnline);
-  $("#localStatus").textContent = localOnline
-    ? `Companion app connected (${smtpSenders.length} SMTP account${smtpSenders.length === 1 ? "" : "s"})`
-    : "Companion app not running (only needed for non-Gmail accounts)";
+  $("#localStatus").textContent = localOnline ? "Companion app connected" : "Companion app offline";
 }
 
 // ---------- senders ----------
@@ -56,25 +55,46 @@ function allSenders() {
   ];
 }
 
-function renderSenders() {
-  const list = allSenders();
-  const checked = new Set([...document.querySelectorAll("#senders input:checked")].map(i => i.value));
-  const first = !document.querySelector("#senders input");
-  $("#senders").innerHTML = list.length ? list.map(s => {
-    const id = `${s.type}:${s.email}`;
-    return `<div class="sender">
-      <input type="checkbox" value="${esc(id)}" ${first || checked.has(id) ? "checked" : ""}>
-      <div class="who">${esc(s.name || s.email)}<small>${esc(s.email)}</small></div>
-      <span class="badge">${s.type === "gmail" ? "Gmail" : "SMTP"}</span>
-      <button class="ghost" data-del="${esc(id)}">Remove</button>
-    </div>`;
-  }).join("") : '<div class="hint">No senders yet. Sign in with Google, or add an SMTP account.</div>';
+const senderId = s => `${s.type}:${s.email}`;
+const typeLabel = s => (s.type === "gmail" ? "Gmail" : "SMTP");
+
+function openAccounts() {
+  $("#accountsPanel").open = true;
+  $("#accountsPanel").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-$("#senders").addEventListener("click", async e => {
+// sender ids already shown as pills; any sender not in here yet starts selected
+const shownSenders = new Set();
+
+function renderSenders() {
+  const list = allSenders();
+  const checked = new Set([...document.querySelectorAll("#from input:checked")].map(i => i.value));
+  const isChecked = id => checked.has(id) || !shownSenders.has(id);
+
+  $("#from").innerHTML = list.length
+    ? list.map(s => `
+      <label class="pill" title="${esc(s.name || s.email)}">
+        <input type="checkbox" value="${esc(senderId(s))}" ${isChecked(senderId(s)) ? "checked" : ""}>
+        <span>${esc(s.email)}</span><small>${typeLabel(s)}</small>
+      </label>`).join("")
+    : '<span class="empty">No accounts yet. <button type="button" class="link" data-open-accounts>Add one</button></span>';
+  list.forEach(s => shownSenders.add(senderId(s)));
+
+  $("#accounts").innerHTML = list.map(s => `
+    <div class="row">
+      <div class="who">${esc(s.name || s.email)}<small>${esc(s.email)}</small></div>
+      <span class="badge">${typeLabel(s)}</span>
+      <button type="button" class="link" data-del="${esc(senderId(s))}">Remove</button>
+    </div>`).join("");
+}
+
+$("#manageBtn").addEventListener("click", openAccounts);
+$("#from").addEventListener("click", e => e.target.closest("[data-open-accounts]") && openAccounts());
+
+$("#accounts").addEventListener("click", async e => {
   const id = e.target.dataset.del;
   if (!id) return;
-  const [type, email] = [id.slice(0, id.indexOf(":")), id.slice(id.indexOf(":") + 1)];
+  const type = id.slice(0, id.indexOf(":")), email = id.slice(id.indexOf(":") + 1);
   if (!confirm(`Remove ${email}?`)) return;
   if (type === "gmail") {
     gmailAccounts = gmailAccounts.filter(a => a.email !== email);
@@ -89,7 +109,7 @@ $("#senders").addEventListener("click", async e => {
 $("#googleBtn").addEventListener("click", async () => {
   const msg = $("#googleMsg");
   if (!settings.clientId) {
-    $("#settingsBox").open = true;
+    $("#settingsPanel").open = true;
     return setMsg(msg, "Add a Google OAuth client ID in Settings first.", "err");
   }
   setMsg(msg, "Waiting for Google…");
@@ -114,7 +134,7 @@ $("#smtpForm").addEventListener("submit", async e => {
   try {
     await local("/api/senders", Object.fromEntries(new FormData(e.target)));
     e.target.reset();
-    setMsg(msg, "Sender saved.", "ok");
+    setMsg(msg, "Account saved.", "ok");
     await refreshLocal();
     renderSenders();
   } catch (err) {
@@ -139,8 +159,9 @@ $("#settingsForm").addEventListener("submit", async e => {
 
 // ---------- sending ----------
 
-const countRecipients = v => parseRecipients(v).recipients.length;
-$("[name=recipients]").addEventListener("input", e => ($("#rcount").textContent = countRecipients(e.target.value)));
+$("#recipients").addEventListener("input", e => {
+  $("#rcount").textContent = plural(parseRecipients(e.target.value).recipients.length, "recipient");
+});
 
 let job = null;
 
@@ -171,9 +192,9 @@ async function sendOne(task, { subject, body, html }) {
 function renderJob() {
   const done = job.sent + job.failed;
   $("#pBar").style.width = job.total ? `${(done / job.total) * 100}%` : "0";
-  $("#pSent").textContent = `✓ ${job.sent} sent`;
-  $("#pFailed").textContent = `✕ ${job.failed} failed`;
   $("#pTotal").textContent = `${done} / ${job.total}`;
+  $("#pSent").textContent = `${job.sent} sent`;
+  $("#pFailed").textContent = `${job.failed} failed`;
   $("#pLog").innerHTML =
     job.invalid.map(x => `<div class="err">skipped invalid address: ${esc(x)}</div>`).join("") +
     job.results.slice().reverse().map(r =>
@@ -183,28 +204,28 @@ function renderJob() {
 $("#sendForm").addEventListener("submit", async e => {
   e.preventDefault();
   const f = new FormData(e.target), msg = $("#sendMsg");
-  const chosen = new Set([...document.querySelectorAll("#senders input:checked")].map(i => i.value));
-  const senders = allSenders().filter(s => chosen.has(`${s.type}:${s.email}`));
+  const chosen = new Set([...document.querySelectorAll("#from input:checked")].map(i => i.value));
+  const senders = allSenders().filter(s => chosen.has(senderId(s)));
   const { recipients, invalid } = parseRecipients(f.get("recipients"));
   const content = { subject: f.get("subject"), body: f.get("body"), html: f.has("html") };
 
   if (!senders.length) return setMsg(msg, "Pick at least one sender", "err");
   if (!recipients.length) return setMsg(msg, "Add at least one valid recipient", "err");
-  if (!content.subject.trim() || !content.body.trim()) return setMsg(msg, "Subject and body are required", "err");
+  if (!content.subject.trim() || !content.body.trim()) return setMsg(msg, "Subject and message are required", "err");
   if (senders.some(s => s.type === "smtp") && !localOnline) {
-    return setMsg(msg, "SMTP senders need the companion app running (python3 app.py)", "err");
+    return setMsg(msg, "SMTP accounts need the companion app running (python3 app.py)", "err");
   }
 
   const tasks = planTasks(senders, recipients, f.get("mode"));
-  if (!confirm(`Send ${tasks.length} email(s) from ${senders.length} sender(s)?`)) return;
+  if (!confirm(`Send ${plural(tasks.length, "email")} from ${plural(senders.length, "account")}?`)) return;
   setMsg(msg, "");
 
   const delay = Math.max(0, Number(f.get("delay")) || 0) * 1000;
   job = { running: true, cancel: false, total: tasks.length, sent: 0, failed: 0, results: [], invalid };
   $("#sendBtn").disabled = true;
-  $("#progress").style.display = "block";
-  $("#cancelBtn").style.display = "";
-  $("#keepOpen").style.display = "";
+  $("#progress").hidden = false;
+  $("#cancelBtn").hidden = false;
+  $("#keepOpen").hidden = false;
   $("#pStatus").textContent = "Sending…";
   renderJob();
 
@@ -227,8 +248,8 @@ $("#sendForm").addEventListener("submit", async e => {
 
   job.running = false;
   $("#pStatus").textContent = job.cancel ? "Stopped" : "Finished";
-  $("#cancelBtn").style.display = "none";
-  $("#keepOpen").style.display = "none";
+  $("#cancelBtn").hidden = true;
+  $("#keepOpen").hidden = true;
   $("#sendBtn").disabled = false;
 });
 
@@ -237,7 +258,7 @@ $("#sendForm").addEventListener("submit", async e => {
 await loadState();
 $("[name=clientId]").value = settings.clientId;
 $("[name=localUrl]").value = settings.localUrl;
-if (!settings.clientId) $("#settingsBox").open = true;
 renderSenders();
 await refreshLocal();
 renderSenders();
+if (!allSenders().length) $("#accountsPanel").open = true;

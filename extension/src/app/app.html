@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Email Sender</title>
+<link rel="icon" href="../../assets/32x32.png">
+<link rel="stylesheet" href="./app.css">
+</head>
+<body>
+<main class="shell">
+  <header class="brand">
+    <img src="../../assets/logo.png" width="72" height="72" alt="">
+    <h1>Email Sender</h1>
+  </header>
+
+  <form id="sendForm" class="composer" novalidate>
+    <div class="field">
+      <div class="field-head">
+        <span class="label">From</span>
+        <button type="button" class="link" id="manageBtn">Manage accounts</button>
+      </div>
+      <div id="from" class="pills"></div>
+    </div>
+
+    <div class="field">
+      <div class="field-head">
+        <label class="label" for="recipients">To</label>
+        <span class="count" id="rcount">0 recipients</span>
+      </div>
+      <textarea id="recipients" name="recipients" rows="4" placeholder="jane@example.com, Bob Lee <bob@example.com>"></textarea>
+    </div>
+
+    <div class="field">
+      <label class="label" for="subject">Subject</label>
+      <input id="subject" name="subject" placeholder="Hi {name}">
+    </div>
+
+    <div class="field">
+      <label class="label" for="body">Message</label>
+      <textarea id="body" name="body" rows="9" placeholder="Hello {name},&#10;&#10;…"></textarea>
+      <p class="hint"><code>{name}</code> and <code>{email}</code> are filled in for each recipient.</p>
+    </div>
+
+    <div class="options">
+      <label class="toggle">
+        <span class="switch"><input type="checkbox" name="html"><span class="slider"></span></span>
+        HTML
+      </label>
+      <label class="inline">
+        Senders
+        <select name="mode">
+          <option value="rotate">take turns</option>
+          <option value="all">all send to everyone</option>
+        </select>
+      </label>
+      <label class="inline">
+        Delay
+        <input class="num" name="delay" type="number" min="0" step="0.5" value="2">
+        s
+      </label>
+    </div>
+
+    <button id="sendBtn" class="primary">Send</button>
+    <div class="msg" id="sendMsg"></div>
+  </form>
+
+  <section id="progress" class="progress" hidden>
+    <div class="progress-head">
+      <strong id="pStatus">Sending…</strong>
+      <span class="count" id="pTotal"></span>
+      <button type="button" class="link" id="cancelBtn">Stop</button>
+    </div>
+    <div class="bar"><div id="pBar"></div></div>
+    <div class="stats"><span id="pSent"></span><span id="pFailed"></span></div>
+    <p class="hint" id="keepOpen">Keep this tab open until sending finishes.</p>
+    <div class="log" id="pLog"></div>
+  </section>
+
+  <details class="panel" id="accountsPanel">
+    <summary>Accounts</summary>
+    <div id="accounts" class="list"></div>
+    <button type="button" id="googleBtn" class="secondary">Sign in with Google</button>
+    <div class="msg" id="googleMsg"></div>
+
+    <details class="sub" id="smtpBox">
+      <summary>Add Outlook, Yahoo or another SMTP account</summary>
+      <p class="hint">These send through the companion app (<code>python3 app.py</code>) on this computer.</p>
+      <form id="smtpForm">
+        <div class="grid">
+          <label>Email<input name="email" type="email" required placeholder="you@outlook.com"></label>
+          <label>Display name<input name="name" placeholder="Your Name"></label>
+          <label class="wide">App password<input name="password" type="password" required autocomplete="new-password"></label>
+          <label>SMTP host<input name="host" placeholder="auto"></label>
+          <label>Port<input name="port" placeholder="auto"></label>
+        </div>
+        <button class="secondary">Verify &amp; save</button>
+        <div class="msg" id="smtpMsg"></div>
+      </form>
+    </details>
+  </details>
+
+  <details class="panel" id="settingsPanel">
+    <summary>
+      Settings
+      <span class="status"><span class="dot" id="localDot"></span><span id="localStatus">Checking companion app…</span></span>
+    </summary>
+    <form id="settingsForm">
+      <label>Google OAuth client ID<input name="clientId" placeholder="….apps.googleusercontent.com"></label>
+      <p class="hint">Redirect URI to register in Google Cloud: <code id="redirectUri"></code></p>
+      <label>Companion app URL<input name="localUrl"></label>
+      <button class="secondary">Save</button>
+      <div class="msg" id="settingsMsg"></div>
+    </form>
+  </details>
+</main>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

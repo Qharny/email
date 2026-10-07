@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import {
   base64Url, buildMime, encodeHeader, fill, formatAddress, parseRecipients, planTasks,
-} from "../../extension/lib.js";
+} from "../../extension/src/lib/lib.js";
 
 const decodeB64Url = s => Buffer.from(s.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8");
 const decodeBodyPart = (mime, type) => {
@@ -67,6 +67,20 @@ test("manifest is valid MV3 and points at existing files", () => {
   const manifest = JSON.parse(readFileSync(new URL("manifest.json", dir), "utf8"));
   assert.equal(manifest.manifest_version, 3);
   assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
-  const files = [manifest.background.service_worker, "app.html", "app.js", ...Object.values(manifest.icons)];
+  const files = [manifest.action.default_popup, "src/app/app.html", ...Object.values(manifest.icons)];
   for (const f of files) readFileSync(new URL(f, dir));
+});
+
+test("every local file referenced by the extension pages exists", () => {
+  const dir = new URL("../../extension/", import.meta.url);
+  for (const page of ["src/popup/popup.html", "src/app/app.html"]) {
+    const pageUrl = new URL(page, dir);
+    const html = readFileSync(pageUrl, "utf8");
+    const refs = [...html.matchAll(/(?:src|href)="([^"#:]+)"/g)].map(m => m[1]);
+    assert.ok(refs.length > 2, `${page} should reference its assets`);
+    for (const ref of refs) readFileSync(new URL(ref, pageUrl));
+  }
+  // module imports in the composer
+  const appUrl = new URL("src/app/app.js", dir);
+  for (const [, ref] of readFileSync(appUrl, "utf8").matchAll(/from "(\.[^"]+)"/g)) readFileSync(new URL(ref, appUrl));
 });

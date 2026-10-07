@@ -1,89 +1,70 @@
-# Email Sender
+<div align="center">
+  <img src="extension/assets/logo.png" width="150">
+  <h1>Email Sender</h1>
+</div>
 
-Send one email to many recipients from one or more of your own email accounts. Available as a **browser extension** (Chrome, Edge, Brave) and as a small **local app** that runs in any browser. Everything stays on your machine.
+Email Sender is a minimal extension for sending one email to many people from your own Gmail, Outlook or SMTP accounts. Each recipient gets their own copy, personalised with their name.
 
-![CI](https://github.com/Qharny/email/actions/workflows/ci.yml/badge.svg)
+<p align="center">
+  <a rel="noreferrer noopener" href="https://github.com/Qharny/email/releases/latest/download/email-sender-extension.zip">
+    <img alt="Download" src="https://img.shields.io/badge/Download-141e24.svg?&style=for-the-badge&logo=github&logoColor=white" />
+  </a>
+  <a rel="noreferrer noopener" href="#installation-chrome-microsoft-edge-or-brave">
+    <img alt="Chrome" src="https://img.shields.io/badge/Chrome-141e24.svg?&style=for-the-badge&logo=google-chrome&logoColor=white" />
+  </a>
+  <a rel="noreferrer noopener" href="#installation-chrome-microsoft-edge-or-brave">
+    <img alt="Microsoft Edge" src="https://img.shields.io/badge/Edge-141e24.svg?&style=for-the-badge" />
+  </a>
+  <a rel="noreferrer noopener" href="#installation-chrome-microsoft-edge-or-brave">
+    <img alt="Brave" src="https://img.shields.io/badge/Brave-141e24.svg?&style=for-the-badge&logo=brave&logoColor=white" />
+  </a>
+</p>
 
-## Features
+<p align="center">
+  <img src="assets/screenshot.png" width="1080" alt="Email Sender in Google Chrome">
+</p>
 
-- Multiple sender accounts: Gmail via Google sign-in, plus Outlook, Yahoo, iCloud, Zoho or any SMTP server
-- Paste many recipients — one per line or comma-separated; duplicates and invalid addresses are filtered
-- Each recipient gets an individual email (nobody sees the other addresses)
-- Personalisation with `{name}` and `{email}` (use `Jane <jane@example.com>` to supply a name)
-- Plain text or HTML messages
-- Two modes with several senders: **rotate** (split recipients across senders) or **all** (every sender emails every recipient)
-- Configurable delay between emails, live progress and a stop button
+## Installation (Chrome, Microsoft Edge or Brave)
+- **[Download](https://github.com/Qharny/email/releases/latest/download/email-sender-extension.zip)** the zip from the GitHub Releases and **unzip it**, or **clone this repo** and use the `extension` folder.
+- **Open the extensions page**: `chrome://extensions` (Edge: `edge://extensions`, Brave: `brave://extensions`).
+- If you did not do it already, **toggle "Developer mode"**. This is usually a toggle at the top right of the extensions page.
+- Click **_Load unpacked_**.
+- In the window that pops up, **select the unzipped folder**, then **click _Select_**.
+- **Done!** Click the _Email Sender_ icon in the toolbar, then **Open composer**.
 
-## Browser extension
+## Sending from Gmail
+Gmail accounts sign in with Google and send through the Gmail API. This needs a free Google OAuth client ID, set up once:
+- In **[Google Cloud Console](https://console.cloud.google.com/)**, create a project and **enable the Gmail API** (_APIs & Services → Library_).
+- **Configure the OAuth consent screen** as _External_, add the scope `.../auth/gmail.send`, and **add every Gmail address that will send as a test user**.
+- **Create an OAuth client ID** (_Credentials → Create credentials_) of type _Web application_ with this authorized redirect URI:
+  ```
+  https://llgaclglhdcidecbnfbfikmfiliakgon.chromiumapp.org/
+  ```
+- **Paste the client ID** into the composer under _Settings_, then click **Sign in with Google** under _Accounts_.
 
-### Install
+While the consent screen is in _Testing_, only listed test users (up to 100) can sign in and Google shows an "unverified app" notice. To ship a build with the client ID pre-filled, set `GOOGLE_CLIENT_ID` in `extension/src/lib/config.js`.
 
-1. Download `email-sender-extension-vX.Y.Z.zip` from [Releases](https://github.com/Qharny/email/releases) and unzip it into a folder.
-2. Open `chrome://extensions` (Edge: `edge://extensions`, Brave: `brave://extensions`).
-3. Turn on **Developer mode**, click **Load unpacked**, and select the unzipped folder.
-4. Click the **Email Sender** icon in the toolbar. It opens in its own tab — keep that tab open while sending.
+## Sending from Outlook, Yahoo or other accounts
+Browsers can't talk to mail servers directly, so these accounts send through a small companion app on your computer (Python 3.9+, nothing to install):
+- **[Download](https://github.com/Qharny/email/releases/latest/download/email-sender.zip)** the companion app and **unzip it**.
+- **Run** `python3 app.py` (Windows: `py app.py`). It also opens a standalone web version at `http://127.0.0.1:8025`.
+- In the composer, open _Accounts → Add Outlook, Yahoo or another SMTP account_ and **use an app password**, not your normal password. Gmail: [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords); Outlook, Yahoo and iCloud have the same option in their security settings.
 
-### How accounts work
+The popup and _Settings_ show whether the companion app is connected.
 
-| Account type | How it sends | Needs |
-|---|---|---|
-| Gmail / Google Workspace | Gmail API, directly from the extension | A Google OAuth client ID (one-time setup below) |
-| Outlook, Yahoo, iCloud, other SMTP | Through the companion app on your computer | `python3 app.py` running (see [Local app](#local-app)) |
-
-The Settings panel shows whether the companion app is connected. You only need it for non-Gmail accounts.
-
-### One-time Google setup (for "Sign in with Google")
-
-Browsers don't allow extensions to talk to mail servers directly, so Gmail sending goes through Google's Gmail API, which needs an OAuth client ID:
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/) and create a project.
-2. **APIs & Services → Library** → enable the **Gmail API**.
-3. **APIs & Services → OAuth consent screen** → choose **External**, fill in the app name and your email. Under **Scopes** add `.../auth/gmail.send`. Under **Test users** add every Gmail address that will send.
-4. **APIs & Services → Credentials → Create credentials → OAuth client ID** → type **Web application**. Under **Authorized redirect URIs** add:
-   ```
-   https://llgaclglhdcidecbnfbfikmfiliakgon.chromiumapp.org/
-   ```
-5. Copy the client ID (`….apps.googleusercontent.com`) into the extension's **Settings → Google OAuth client ID**, and save.
-6. Click **Sign in with Google**. Repeat for each Gmail account you want to send from.
-
-While the consent screen is in *Testing* mode, only the test users you listed can sign in (up to 100) and Google shows an "unverified app" warning — click **Continue**. To open it to everyone, submit the app for Google verification.
-
-To ship a build with the client ID pre-filled, set `GOOGLE_CLIENT_ID` in `extension/config.js`.
-
-## Local app
-
-Also the companion for the extension's SMTP accounts. Requires Python 3.9 or newer, no packages to install.
-
-1. Download `email-sender-vX.Y.Z.zip` from [Releases](https://github.com/Qharny/email/releases) and unzip it
-   (or `git clone https://github.com/Qharny/email.git`).
-2. Run `python3 app.py` (Windows: `py app.py`). Your browser opens <http://127.0.0.1:8025>, where you can also send without the extension.
-
-### Adding an SMTP sender
-
-Most providers don't accept your normal password over SMTP — create an **App Password**:
-
-- Gmail: turn on 2-Step Verification, then create one at <https://myaccount.google.com/apppasswords>.
-- Outlook, Yahoo and iCloud have equivalent app-password pages in their security settings.
-
-Add the account in the extension (**+ Add Outlook / Yahoo / other SMTP account**) or in the local app. It logs in to verify before saving. For unknown providers, fill in the SMTP host and port (465 = SSL, anything else = STARTTLS).
-
-## Data and privacy
-
-- Gmail sign-in tokens (valid for one hour) and settings are kept in the extension's local browser storage.
-- SMTP credentials are stored by the local app in `senders.json` (file mode `600`, git-ignored).
-- The local app writes every send attempt to `send_log.jsonl` and only listens on `127.0.0.1`.
-
-## Sending responsibly
-
-Providers limit how much you can send (Gmail: roughly 500 recipients/day for personal accounts). Keep a delay of a few seconds between emails and only email people who expect to hear from you, or your account may be flagged.
+## Good to know
+- **Recipients**: one per line or comma-separated; write `Jane Doe <jane@example.com>` to fill `{name}`. Duplicates and invalid addresses are skipped.
+- **Several senders**: they either _take turns_ (recipients are split between them) or _all send to everyone_.
+- **Limits**: providers cap daily sending (Gmail: about 500 recipients a day). Keep a delay of a few seconds and only email people who expect it.
+- **Privacy**: Gmail tokens and settings stay in the extension's local storage. SMTP passwords stay in `senders.json` next to `app.py` (owner-only, git-ignored), and the companion app only listens on `127.0.0.1`.
 
 ## Development
-
 ```bash
-python3 -m unittest discover -s tests -v   # local app
+python3 -m unittest discover -s tests -v   # companion app
 node --test tests/js/lib.test.mjs          # extension
 ```
+Load the `extension` folder with **_Load unpacked_** to try changes. To release, bump `version` in `extension/manifest.json` and push a matching tag (e.g. `v1.3.0`); GitHub Actions runs the tests and publishes the zips.
 
-To try the extension from source, load the `extension/` folder with **Load unpacked**.
+### Related
 
-CI runs both test suites on every push and pull request. To release, bump `version` in `extension/manifest.json`, then push a matching tag (e.g. `v1.3.0`): the workflow runs the tests and publishes the extension zip and the local-app zip/tarball as a GitHub Release.
+Design inspired by [Minimal YouTube](https://github.com/ephraimduncan/minimal-youtube).

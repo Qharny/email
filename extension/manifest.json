@@ -1,31 +1,30 @@
 {
-  "manifest_version": 3,
-  "name": "Email Sender",
-  "short_name": "Email Sender",
-  "version": "1.2.0",
-  "description": "Send one email to many recipients from your Gmail accounts (or any SMTP account via the companion app).",
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApwQfPQMAhbPbxmmAOXjilDPaO1Hn6uhMZlksJGHMmmYcIlExOGkCD2v4CRcwj6olRnt4fipSdzmuvwjbWbuTtAYjJA3HDfbY7yAF85bxRvqNy/0IbW0rqW19a4YpG7I2ibn6xn/4bpWGpnAnmi55+ytfNsBQWxzgMTM9Ni+kuyDSSGmhL6754V5or/AZ/hzDZrtApDyBflde7Vh7h1H2YTlQfB2RVnQFuNu91L2KWiUTlvocMDmNawjhpqvYkRLTaCkaw7TgMfRHTY/0nQbyk8apsjpIFBPVZ4qd4MaDl/IFsif//OY34e3SdbLc6tjHiSiapHlQGw6pmgZn8EUaDwIDAQAB",
-  "icons": {
-    "16": "icons/icon16.png",
-    "32": "icons/icon32.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
-  "action": {
-    "default_title": "Email Sender",
-    "default_icon": {
-      "16": "icons/icon16.png",
-      "32": "icons/icon32.png"
-    }
-  },
-  "background": {
-    "service_worker": "background.js"
-  },
-  "permissions": ["identity", "storage", "tabs"],
-  "host_permissions": [
-    "https://gmail.googleapis.com/*",
-    "https://www.googleapis.com/*",
-    "http://127.0.0.1/*",
-    "http://localhost/*"
-  ]
+    "manifest_version": 3,
+
+    "name": "Email Sender",
+    "version": "1.3.0",
+    "description": "A minimal extension for sending one email to many people from your own Gmail, Outlook or SMTP accounts.",
+    "author": "Qharny",
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApwQfPQMAhbPbxmmAOXjilDPaO1Hn6uhMZlksJGHMmmYcIlExOGkCD2v4CRcwj6olRnt4fipSdzmuvwjbWbuTtAYjJA3HDfbY7yAF85bxRvqNy/0IbW0rqW19a4YpG7I2ibn6xn/4bpWGpnAnmi55+ytfNsBQWxzgMTM9Ni+kuyDSSGmhL6754V5or/AZ/hzDZrtApDyBflde7Vh7h1H2YTlQfB2RVnQFuNu91L2KWiUTlvocMDmNawjhpqvYkRLTaCkaw7TgMfRHTY/0nQbyk8apsjpIFBPVZ4qd4MaDl/IFsif//OY34e3SdbLc6tjHiSiapHlQGw6pmgZn8EUaDwIDAQAB",
+
+    "icons": {
+        "16": "assets/16x16.png",
+        "32": "assets/32x32.png",
+        "48": "assets/48x48.png",
+        "128": "assets/128x128.png"
+    },
+
+    "action": {
+        "default_title": "Email Sender",
+        "default_popup": "src/popup/popup.html"
+    },
+
+    "permissions": ["identity", "storage", "tabs"],
+
+    "host_permissions": [
+        "https://gmail.googleapis.com/*",
+        "https://www.googleapis.com/*",
+        "http://127.0.0.1/*",
+        "http://localhost/*"
+    ]
 }
