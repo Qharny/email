@@ -30,9 +30,10 @@ jobs:
         run: |
           NAME="email-sender-${GITHUB_REF_NAME}"
           mkdir -p "dist/$NAME"
-          cp app.py index.html README.md "dist/$NAME/"
+          cp app.py index.html README.md LICENSE "dist/$NAME/"
           (cd dist && zip -r "$NAME.zip" "$NAME" && tar -czf "$NAME.tar.gz" "$NAME")
           (cd extension && zip -r "../dist/email-sender-extension-${GITHUB_REF_NAME}.zip" . -x '*.DS_Store')
+          zip -j "dist/email-sender-extension-${GITHUB_REF_NAME}.zip" LICENSE
           # version-less copies so README links can use releases/latest/download/<name>
           cp "dist/email-sender-extension-${GITHUB_REF_NAME}.zip" dist/email-sender-extension.zip
           cp "dist/$NAME.zip" dist/email-sender.zip

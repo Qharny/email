@@ -65,6 +65,10 @@ node --test tests/js/lib.test.mjs          # extension
 ```
 Load the `extension` folder with **_Load unpacked_** to try changes. To release, bump `version` in `extension/manifest.json` and push a matching tag (e.g. `v1.3.0`); GitHub Actions runs the tests and publishes the zips.
 
+## License
+
+[MIT](LICENSE)
+
 ### Related
 
 Design inspired by [Minimal YouTube](https://github.com/ephraimduncan/minimal-youtube).
